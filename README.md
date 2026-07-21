@@ -1,138 +1,146 @@
-# Project 021 – Automated Terraform Apply Pipeline with GitHub Actions
+# Project 022 – AWS Route 53 Hosted Zone with Terraform
 
 ## Overview
 
-This project extends the previous CI pipeline by implementing an automated Terraform deployment workflow using GitHub Actions.
+This project demonstrates how to provision and manage an Amazon Route 53 Hosted Zone using Terraform. It also covers delegating a domain registered with Namecheap to Amazon Route 53 by updating the domain's authoritative nameservers.
 
-The workflow authenticates to AWS using GitHub OpenID Connect (OIDC), validates the Terraform configuration, generates an execution plan, and automatically applies infrastructure changes after a successful plan stage.
-
-This project demonstrates a basic Continuous Delivery (CD) workflow for Infrastructure as Code.
+By managing DNS as Infrastructure as Code (IaC), the project establishes the foundation for future deployments involving HTTPS, Application Load Balancers, and CloudFront.
 
 ---
 
 ## Architecture
 
-```
-Developer
-    │
-    ▼
-Git Push
-    │
-    ▼
-GitHub Actions
-    │
-    ├───────────────┐
-    ▼               │
-Terraform Plan      │
-    │               │
-    ▼               │
-Terraform Apply ◄───┘
-    │
-    ▼
-AWS Infrastructure
+```text
+                Internet
+                    │
+                    ▼
+          Namecheap Domain Registrar
+                    │
+      (Custom Name Servers)
+                    │
+                    ▼
+        Amazon Route 53 Hosted Zone
+                    │
+                    ▼
+              DNS Records
+                    │
+                    ▼
+        Future AWS Resources
+     (ALB, CloudFront, EC2)
 ```
 
 ---
 
 ## Project Objectives
 
-* Build a multi-job GitHub Actions workflow
-* Authenticate securely to AWS using GitHub OIDC
-* Validate Terraform configuration automatically
-* Generate Terraform execution plans
-* Automatically apply approved infrastructure changes
-* Eliminate the need for long-lived AWS access keys
+* Provision a Route 53 Hosted Zone using Terraform.
+* Manage DNS infrastructure as code.
+* Delegate a Namecheap domain to Amazon Route 53.
+* Configure a dedicated Terraform remote backend.
+* Prepare the DNS foundation for future AWS networking projects.
 
 ---
 
 ## Technologies Used
 
 * Terraform
+* Amazon Route 53
+* Amazon S3 (Remote Backend)
 * AWS IAM
-* AWS STS
-* GitHub Actions
-* GitHub OIDC
-* Amazon EC2
-* Amazon VPC
-* Amazon S3 Remote Backend
+* GitHub
+* Namecheap Domain Registrar
 
 ---
 
-## GitHub Actions Workflow
+## Terraform Resources
 
-### Job 1
+This project provisions:
 
-* Checkout Repository
-* Configure AWS Credentials (OIDC)
-* Setup Terraform
-* Terraform Init
-* Terraform Format Check
-* Terraform Validate
-* Terraform Plan
+* Route 53 Public Hosted Zone
 
-### Job 2
+Terraform outputs include:
 
-Runs only after the successful completion of the Plan job.
+* Hosted Zone ID
+* Route 53 Name Servers
 
-* Checkout Repository
-* Configure AWS Credentials
-* Setup Terraform
-* Terraform Init
-* Terraform Apply
-
-The workflow uses the `needs:` keyword to ensure Terraform Apply executes only after a successful Terraform Plan.
+These outputs are used to configure Namecheap with the Route 53 authoritative nameservers.
 
 ---
 
 ## Repository Structure
 
-```
+```text
 .
-├── .github/
-│   └── workflows/
-│       └── terraform.yml
 ├── backend.tf
-├── iam.tf
-├── main.tf
 ├── provider.tf
-├── secrets.tf
 ├── variables.tf
+├── terraform.tfvars
+├── main.tf
 ├── outputs.tf
-└── README.md
+├── README.md
+└── .github/
+    └── workflows/
+        └── terraform.yml
 ```
 
 ---
 
-## Security
+## Domain Delegation Process
 
-This project follows several security best practices:
+1. Purchase or own a domain in Namecheap.
+2. Create a Public Hosted Zone in Amazon Route 53 using Terraform.
+3. Retrieve the Route 53 name servers from Terraform outputs.
+4. Update the Namecheap domain to use the Route 53 custom name servers.
+5. Wait for DNS propagation.
+6. Verify that Route 53 becomes the authoritative DNS provider for the domain.
 
-* GitHub OpenID Connect (OIDC) authentication
-* No long-lived AWS access keys
-* Temporary STS credentials
-* GitHub Secrets for sensitive Terraform variables
-* Remote Terraform state stored in Amazon S3
+---
+
+## Terraform Workflow
+
+```text
+Terraform Init
+        │
+        ▼
+Terraform Validate
+        │
+        ▼
+Terraform Plan
+        │
+        ▼
+Terraform Apply
+        │
+        ▼
+Route 53 Hosted Zone Created
+        │
+        ▼
+Update Namecheap Name Servers
+```
 
 ---
 
 ## Lessons Learned
 
-During development I learned several practical DevOps concepts:
+During this project I learned:
 
-* GitHub Actions jobs execute on separate runners.
-* Each job requires its own checkout, authentication, and Terraform initialization.
-* Terraform automatically detects changes caused by updated AMIs when using `most_recent = true`.
-* Temporary AWS STS credentials are generated for every workflow execution.
-* Proper Git repository organization is important when managing multiple Infrastructure as Code projects.
+* The difference between a domain registrar and a DNS hosting service.
+* How Route 53 Public Hosted Zones work.
+* How domain delegation transfers DNS authority from Namecheap to Route 53.
+* The purpose of NS and SOA records.
+* Why DNS propagation takes time.
+* How to manage DNS infrastructure using Terraform.
 
 ---
 
 ## Future Improvements
 
-* Add manual deployment approval using GitHub Environments.
-* Introduce reusable GitHub Actions workflows.
-* Add Terraform security scanning.
-* Integrate automated testing before deployment.
+Future projects will build on this foundation by adding:
+
+* Route 53 Alias Records
+* AWS Certificate Manager (ACM)
+* HTTPS Application Load Balancer
+* Amazon CloudFront
+* Multi-record DNS management
 
 ---
 
@@ -140,4 +148,10 @@ During development I learned several practical DevOps concepts:
 
 **Peter Madueke**
 
-AWS • Terraform • GitHub Actions • Infrastructure as Code
+Cloud Engineering Portfolio
+
+* AWS
+* Terraform
+* GitHub Actions
+* Infrastructure as Code
+

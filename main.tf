@@ -651,3 +651,13 @@ resource "aws_route53_record" "root" {
   }
 
 }
+
+resource "aws_route53_zone" "main" {
+  name = var.domain_name
+
+  tags = {
+    Name        = "Route53 Hosted Zone"
+    Environment = "Lab"
+    Project     = "022"
+  }
+}
