@@ -22,6 +22,7 @@ variable "aws_region" {
 }
 
 variable "domain_name" {
-  type = string
+  type    = string
+  default = "idevops2026.site"
 }
 
